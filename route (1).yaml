@@ -1,0 +1,31 @@
+{{- if .Values.route.enabled -}}
+{{- $fullName := include "k1-limit-setup.fullname" . -}}
+{{- $routePath := .Values.route.path -}}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app: {{ template "k1-limit-setup.name" . }}
+    chart: {{ template "k1-limit-setup.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- with .Values.route.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  host: {{ .Values.route.host | quote }}
+  path: {{ $routePath }}
+  to:
+    kind: Service
+    name: {{ $fullName }}
+    weight: 100
+  port:
+    targetPort: 80
+{{- if .Values.route.tls }}
+  tls:
+{{ toYaml .Values.route.tls | indent 4 }}
+{{- end }}
+  wildcardPolicy: None
+{{- end }}
